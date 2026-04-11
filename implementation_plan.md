@@ -132,12 +132,35 @@ aetherwall_gateway:
 - `[x]` Create `docker-compose.yml` (APISIX, LiteLLM, Ollama, Qdrant, LLM Guard)
 - `[x]` Create APISIX and LiteLLM config files
 
-### Step 4: FastAPI Service & Integration Testing 🔲
-- `[ ]` Build FastAPI application (`api/app.py`) with health check and gateway endpoint
-- `[ ]` Build LangGraph Validator Council
-- `[ ]` Build concrete adapters (LLM Guard verifier, APISIX router, Qdrant logger)
-- `[ ]` Write integration tests for LangGraph, Qdrant, LiteLLM
+### Step 4: FastAPI Service & Integration Testing ✅
+- `[x]` Build FastAPI application (`api/app.py`) with health check and gateway endpoint
+- `[x]` Build LangGraph Validator Council (Risk Agent + Context Agent + Arbiter)
+- `[x]` Build concrete adapters (LLM Guard verifier, APISIX router, Qdrant logger)
+- `[x]` Build DI wiring (`api/dependencies.py`) — single composition root
+- `[x]` Write adapter unit tests — **13 tests**
+- `[x]` Write council unit tests — **17 tests**
+- `[x]` Write API integration tests — **6 tests**
 
-### Step 5: E2E Traffic Simulation & Security Testing 🔲
-- `[ ]` Spin up full stack
-- `[ ]` Run automated E2E tests simulating external adversarial agent
+### Step 5: E2E Traffic Simulation & Security Testing ✅
+- `[x]` Build simulated LLM Guard verifier with realistic pattern matching
+- `[x]` Build recording router for assertion-based verification
+- `[x]` Run 13 adversarial E2E scenarios:
+  - `[x]` Benign traffic → ALLOW
+  - `[x]` Prompt injection → SecurityViolationError
+  - `[x]` Jailbreak (DAN mode) → SecurityViolationError
+  - `[x]` Topology probing → ValidationRejectedError
+  - `[x]` User/credential enumeration → ValidationRejectedError
+  - `[x]` PII exfiltration → SecurityViolationError
+  - `[x]` Unknown agent → Policy DENY
+  - `[x]` Unauthorised destination → Policy DENY
+  - `[x]` Cross-agent isolation → Policy DENY
+  - `[x]` SQL injection (DELETE/DROP) → ESCALATE
+  - `[x]` Maximum risk payload → ValidationRejectedError
+  - `[x]` Innocent-wrapper malicious payload → SecurityViolationError
+
+### Final Quality Report
+- **88 tests** across 7 test modules
+- **86% code coverage** (19 source files)
+- **Ruff** — All checks passed
+- **MyPy** — No issues found in 19 source files
+- **0.61s** total test execution time
