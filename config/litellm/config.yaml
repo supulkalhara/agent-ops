@@ -1,0 +1,47 @@
+# ─────────────────────────────────────────────────────────────
+# LiteLLM Proxy Configuration
+#
+# Acts as the AI translation layer, decoupling AetherWall
+# from specific LLM provider APIs.
+# ─────────────────────────────────────────────────────────────
+
+model_list:
+  # ── Local Ollama Models ──────────────────────────────────
+  - model_name: "local/qwen3:8b"
+    litellm_params:
+      model: "ollama/qwen3:8b"
+      api_base: "http://ollama:11434"
+      stream: true
+
+  - model_name: "local/llama3.1:8b"
+    litellm_params:
+      model: "ollama/llama3.1:8b"
+      api_base: "http://ollama:11434"
+      stream: true
+
+  # ── Cloud Models (uncomment to enable) ───────────────────
+  # - model_name: "gpt-4o"
+  #   litellm_params:
+  #     model: "openai/gpt-4o"
+  #     api_key: "os.environ/OPENAI_API_KEY"
+
+  # - model_name: "claude-sonnet"
+  #   litellm_params:
+  #     model: "anthropic/claude-sonnet-4-20250514"
+  #     api_key: "os.environ/ANTHROPIC_API_KEY"
+
+  # - model_name: "groq-llama"
+  #   litellm_params:
+  #     model: "groq/llama3-70b-8192"
+  #     api_key: "os.environ/GROQ_API_KEY"
+
+litellm_settings:
+  drop_params: true
+  set_verbose: false
+  num_retries: 2
+  request_timeout: 60
+
+general_settings:
+  master_key: "os.environ/LITELLM_MASTER_KEY"
+  database_url: ""
+  otel_exporting: false

@@ -1,0 +1,52 @@
+# ─────────────────────────────────────────────────────────────
+# Apache APISIX Configuration
+# ─────────────────────────────────────────────────────────────
+
+apisix:
+  node_listen: 9080
+  enable_admin: true
+  admin_listen:
+    ip: 0.0.0.0
+    port: 9180
+
+deployment:
+  admin:
+    admin_key:
+      - name: admin
+        key: "${APISIX_ADMIN_KEY}"
+        role: admin
+  etcd:
+    host:
+      - "http://etcd:2379"
+    prefix: "/apisix"
+
+# ── Plugins ────────────────────────────────────────────────
+plugins:
+  - real-ip
+  - ai
+  - client-control
+  - proxy-control
+  - request-id
+  - zipkin
+  - ext-plugin-pre-req
+  - ext-plugin-post-req
+  - ext-plugin-post-resp
+  - public-api
+  - prometheus
+  - datadog
+  - limit-req
+  - limit-count
+  - limit-conn
+  - key-auth
+  - basic-auth
+  - jwt-auth
+  - ip-restriction
+  - cors
+  - consumer-restriction
+  - proxy-rewrite
+  - redirect
+  - response-rewrite
+  - grpc-transcode
+  - grpc-web
+  - serverless-pre-function
+  - serverless-post-function

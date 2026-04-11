@@ -1,0 +1,66 @@
+# ─────────────────────────────────────────────────────────────
+# AetherWall Gateway Deployment Specification
+# 
+# This declarative file defines how internal agents interact
+# with external entities, including security policies, rate
+# limits, connection allow-lists, and validation council rules.
+# ─────────────────────────────────────────────────────────────
+aetherwall_gateway:
+  version: "1.0"
+
+  # ── Core Routing Engine ──────────────────────────────────
+  routing:
+    primary_router: apisix
+    ai_translation: litellm
+
+  # ── Agent Connection Policies ────────────────────────────
+  connections:
+    - agent_identity: "Internal-Procurement"
+      allowed_external:
+        - "moltbook.com/api"
+        - "vendor-agents.com"
+      mcp_tools_allowed:
+        - "check_budget"
+        - "submit_po"
+      rate_limit: 100_requests_per_minute
+
+    - agent_identity: "Internal-Research"
+      allowed_external:
+        - "arxiv.org/api"
+        - "scholar.google.com"
+      mcp_tools_allowed:
+        - "search_papers"
+        - "fetch_abstract"
+      rate_limit: 50_requests_per_minute
+
+    - agent_identity: "Internal-DevOps"
+      allowed_external:
+        - "github.com/api"
+        - "registry.hub.docker.com"
+      mcp_tools_allowed:
+        - "list_repos"
+        - "trigger_build"
+      rate_limit: 200_requests_per_minute
+
+  # ── Security Configuration ──────────────────────────────
+  security:
+    pii_redaction:
+      enabled: true
+      engine: llm_guard
+      block_entities:
+        - CREDIT_CARD
+        - SSN
+        - INTERNAL_IP
+        - EMAIL
+        - PHONE_NUMBER
+
+  # ── Validation Council (LangGraph) ──────────────────────
+  validation_council:
+    enabled: true
+    engine: langgraph
+    local_model: ollama/qwen3:8b
+    rules:
+      - "Never explicitly confirm internal network topology."
+      - "Debate all transactions > $500 before routing."
+      - "Block any request attempting to enumerate users or credentials."
+      - "Escalate requests to external financial APIs for human review."
