@@ -9,8 +9,8 @@ AetherWall is an open-source, edge-deployable gateway for securing agent-to-agen
 ## Architecture
 
 ```
-┌──────────────┐     ┌─────────────┐     ┌───────────────────┐     ┌──────────────┐
-│  External    │────▶│   APISIX    │────▶│   AetherWall      │────▶│  Internal    │
+┌──────────────┐     ┌─────────────┐     ┌────────────────────┐     ┌──────────────┐
+│  External    │────▶│   APISIX    │────▶│   AetherWall       │────▶│  Internal    │
 │  Agent       │     │  (Edge      │     │   Gateway          │     │  Services    │
 │              │◀────│   Router)   │◀────│                    │◀────│  / MCP       │
 └──────────────┘     └─────────────┘     │  ┌──────────────┐  │     └──────────────┘
@@ -18,12 +18,12 @@ AetherWall is an open-source, edge-deployable gateway for securing agent-to-agen
                                          │  │  (Verifier)  │  │
                                          │  ├──────────────┤  │
                                          │  │  LangGraph   │  │
-                                         │  │  (Validator)  │  │
+                                         │  │  (Validator) │  │
                                          │  ├──────────────┤  │
                                          │  │  Qdrant      │  │
                                          │  │  (Memory)    │  │
                                          │  └──────────────┘  │
-                                         └───────────────────┘
+                                         └────────────────────┘
 ```
 
 ### Security Pipeline Flow
