@@ -1,6 +1,6 @@
 # 🛡️ AetherWall
 
-**The Enterprise Agent-to-[Agent/MCP] Gateway**
+**The Enterprise Agent-to-MCP Gateway**
 
 AetherWall is an open-source, edge-deployable gateway for securing agent-to-agent and agent-to-MCP communications. It provides a production-grade security pipeline combining traffic inspection, LLM-powered validation, and policy-based routing.
 
