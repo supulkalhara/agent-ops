@@ -148,3 +148,33 @@ See [`.env.sample`](.env.sample) for all available variables.
 ## License
 
 MIT
+
+
+# CONTRIBUTING.md
+
+Thank you for contributing to AetherWall! We appreciate your help in making this project better.
+
+### How to Contribute
+
+1. **Fork the Repository**: Click on the 'Fork' button at the top right of this page and create a copy of the repository in your GitHub account.
+2. **Clone Your Fork**: Clone your forked repository to your local machine using `git clone https://github.com/your-username/aetherwall.git`.
+3. **Create a New Branch**: Create a new branch for your feature or bug fix using `git checkout -b feature-name`.
+4. **Make Changes**: Make the necessary changes and commit them with descriptive messages using `git commit -m "Add feature"`.
+5. **Push Changes**: Push your changes to your forked repository using `git push origin feature-name`.
+6. **Create a Pull Request**: Go to the original AetherWall repository, click on 'Pull Requests', and create a new pull request from your branch.
+
+### Code Style
+
+- Follow PEP 8 for Python code style.
+- Use meaningful variable and function names.
+- Write clear and concise documentation.
+
+### Testing
+
+Ensure that all tests pass before submitting a pull request. You can run the tests using `pytest -v`.
+
+---
+
+## License
+
+MIT
