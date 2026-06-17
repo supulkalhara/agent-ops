@@ -40,7 +40,7 @@ AetherWall is an open-source, edge-deployable gateway for securing agent-to-agen
 ```bash
 # 1. Clone and configure
 git clone https://github.com/supulkalhara/aether.git
-cd aetherwall
+cd aether
 cp .env.sample .env   # Edit with your secrets
 
 # 2. Start the full stack
