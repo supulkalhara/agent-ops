@@ -14,8 +14,8 @@ from typing import Any
 
 import httpx
 
-from aetherwall.domain.models import AgentRequest, ValidationResult
-from aetherwall.interfaces.router import APIRouterInterface
+from agent_ops.domain.models import AgentRequest, ValidationResult
+from agent_ops.interfaces.router import APIRouterInterface
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +59,9 @@ class APISIXRouter(APIRouterInterface):
         target_url = f"{self.proxy_url}/{request.destination}"
 
         headers = {
-            "X-AetherWall-Request-ID": request.request_id,
-            "X-AetherWall-Agent-ID": request.agent_id,
-            "X-AetherWall-Decision": validation.decision.value,
+            "X-AgentOps-Request-ID": request.request_id,
+            "X-AgentOps-Agent-ID": request.agent_id,
+            "X-AgentOps-Decision": validation.decision.value,
             "Content-Type": "application/json",
         }
 

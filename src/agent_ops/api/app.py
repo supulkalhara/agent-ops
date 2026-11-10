@@ -1,5 +1,5 @@
 """
-AetherWall FastAPI Application.
+AgentOps FastAPI Application.
 
 Exposes the gateway pipeline as REST endpoints:
   • POST /gateway/process  — process an inbound agent request
@@ -18,19 +18,19 @@ from typing import Any, AsyncIterator
 from fastapi import FastAPI, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from aetherwall.api.dependencies import (
+from agent_ops.api.dependencies import (
     get_audit_logger,
     get_config,
     get_pipeline,
 )
-from aetherwall.domain.approvals import ApprovalStateError
-from aetherwall.domain.exceptions import (
-    AetherWallError,
+from agent_ops.domain.approvals import ApprovalStateError
+from agent_ops.domain.exceptions import (
+    AgentOpsError,
     RoutingError,
     SecurityViolationError,
     ValidationRejectedError,
 )
-from aetherwall.domain.models import (
+from agent_ops.domain.models import (
     AgentRequest,
     GatewayResponse,
 )
@@ -51,13 +51,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     global _pipeline, _audit_logger
 
     # Configure logging
-    log_level = os.environ.get("AETHERWALL_LOG_LEVEL", "INFO").upper()
+    log_level = os.environ.get("AGENTOPS_LOG_LEVEL", "INFO").upper()
     logging.basicConfig(
         level=getattr(logging, log_level, logging.INFO),
         format="%(asctime)s %(name)s %(levelname)s %(message)s",
     )
 
-    logger.info("🛡️  AetherWall starting up...")
+    logger.info("🛡️  AgentOps starting up...")
 
     # Build the pipeline
     _pipeline = get_pipeline()
@@ -72,12 +72,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             "Qdrant not available at startup — audit logging disabled"
         )
 
-    logger.info("🛡️  AetherWall ready — pipeline assembled")
+    logger.info("🛡️  AgentOps ready — pipeline assembled")
 
     yield
 
     # Cleanup
-    logger.info("🛡️  AetherWall shutting down...")
+    logger.info("🛡️  AgentOps shutting down...")
     if _audit_logger:
         await _audit_logger.close()
 
@@ -86,7 +86,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="AetherWall",
+    title="AgentOps",
     description="Enterprise Agent-to-[Agent/MCP] Security Gateway",
     version="0.1.0",
     lifespan=lifespan,
@@ -158,9 +158,9 @@ class ErrorResponse(BaseModel):
 )
 async def process_request(
     body: ProcessRequest,
-    x_aetherwall_auth: str | None = Header(
+    x_agent_ops_auth: str | None = Header(
         default=None,
-        alias="X-Aetherwall-Auth",
+        alias="X-Agentops-Auth",
         description="Agent credential verifying its identity (when configured)",
     ),
 ) -> ProcessResponse:
@@ -191,7 +191,7 @@ async def process_request(
         response: GatewayResponse = await _pipeline.process_request(
             agent_request,
             context=body.context,
-            auth_token=x_aetherwall_auth,
+            auth_token=x_agent_ops_auth,
         )
 
         # Log to Qdrant (fire-and-forget, don't block the response)
@@ -274,7 +274,7 @@ async def process_request(
             },
         ) from exc
 
-    except AetherWallError as exc:
+    except AgentOpsError as exc:
         raise HTTPException(
             status_code=500,
             detail={
@@ -430,7 +430,7 @@ async def resolve_pending_approval(
 
 @app.post(
     "/config/reload",
-    summary="Hot-reload aether.yaml (kill switches, policy changes)",
+    summary="Hot-reload agentops.yaml (kill switches, policy changes)",
     tags=["Governance"],
 )
 async def reload_config() -> dict[str, Any]:
@@ -438,7 +438,7 @@ async def reload_config() -> dict[str, Any]:
     Reload the gateway configuration without restarting the service.
 
     This makes kill switches and policy changes take effect immediately:
-    set ``enabled: false`` for an agent in aether.yaml, call this
+    set ``enabled: false`` for an agent in agentops.yaml, call this
     endpoint, and the agent is revoked on the next request.
     """
     global _pipeline

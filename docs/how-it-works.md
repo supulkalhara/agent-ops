@@ -1,19 +1,19 @@
-# How AetherWall Works
+# How AgentOps Works
 
 A deep dive into the architecture and the governed pipeline. This document is the "why it's built this way" companion to the [configuration reference](configuration.md).
 
 ## 1. The position of the gateway
 
-AetherWall is an **enforcement point**: a process that stands between agent traffic and whatever agents want to reach. It is deliberately different from three other layers it gets confused with:
+AgentOps is an **enforcement point**: a process that stands between agent traffic and whatever agents want to reach. It is deliberately different from three other layers it gets confused with:
 
 | Layer | Examples | What it does | What it does NOT do |
 |---|---|---|---|
 | **Protocols** | MCP authorization spec, A2A | Define identity handshake and interoperability | Enforce anything at runtime |
 | **Policy engines** | OPA/Rego, Cedar, OpenFGA | Evaluate policy logic over any subject | Own identity, detectors, quotas, or audit |
 | **Detectors/scanners** | LLM Guard, NeMo Guardrails, Lakera | Classify content | Authorize agents, budget spend, or queue humans |
-| **AetherWall** | — | Orchestrate all of the above in one pipeline | — |
+| **AgentOps** | — | Orchestrate all of the above in one pipeline | — |
 
-The design insight: none of those single layers stops an agent from doing the wrong thing **in sequence** — an authenticated-looking agent calling an allowed tool with a poisoned payload to spend an unbounded amount, escalated by nobody. AetherWall's pipeline is the sequence.
+The design insight: none of those single layers stops an agent from doing the wrong thing **in sequence** — an authenticated-looking agent calling an allowed tool with a poisoned payload to spend an unbounded amount, escalated by nobody. AgentOps's pipeline is the sequence.
 
 ## 2. The five phases
 
@@ -33,8 +33,8 @@ Order matters, and each phase is cheap-to-fail-fast at the top:
 Cheap, deterministic checks run **before any LLM or network cost**:
 
 1. **Unknown agent → deny.** If `agent_id` has no connection spec, there is no policy for it. Default-deny is the whole game: the OWASP agentic taxonomy lists *identity spoofing & repudiation* as a top threat, and anonymous traffic in cannot be attributed in an audit.
-2. **Kill switch.** `enabled: false` in `aether.yaml` — enforced in *every* mode including monitor. A disabled agent gets a DENY response with no scanning, no council, no exceptions. Reload with `POST /config/reload` to apply without restarts.
-3. **Authentication.** If a connection declares `credential: "${TOKEN}"`, the request must carry the matching `X-Aetherwall-Auth` header. Self-asserted `agent_id` in a request body is treated as untrusted input, not identity — the token is the identity.
+2. **Kill switch.** `enabled: false` in `agentops.yaml` — enforced in *every* mode including monitor. A disabled agent gets a DENY response with no scanning, no council, no exceptions. Reload with `POST /config/reload` to apply without restarts.
+3. **Authentication.** If a connection declares `credential: "${TOKEN}"`, the request must carry the matching `X-Agentops-Auth` header. Self-asserted `agent_id` in a request body is treated as untrusted input, not identity — the token is the identity.
 4. **Destination allow-list.** Hard deny, enforced even in monitor mode.
 5. **Tool allow-list.** When `metadata.tool_name` is present, it is checked against `mcp_tools_allowed`. This is least-privilege at tool granularity — the MCP-ecosystem equivalent of per-resource RBAC.
 6. **Rate limits.** Sliding-window limiter keyed by agent (`domain/enforcement.py::RateLimiter`); `100_requests_per_minute` parses via `parse_rate_limit`. This is the OWASP *unbounded consumption* guardrail.
@@ -60,7 +60,7 @@ START ──▶ Risk Agent ──▶ Context Agent ──▶ Arbiter ──▶ E
 
 - **Risk Agent** scores financial/security risk from the verifier flags, and high-risk patterns (destructive SQL, transfers, credential terms, etc.).
 - **Context Agent** checks the payload against your natural-language `validation_council.rules` (topology disclosure, transaction debates, enumeration attempts).
-- **Arbiter** applies the configured decision matrix using `governance.decision_thresholds` from `aether.yaml`:
+- **Arbiter** applies the configured decision matrix using `governance.decision_thresholds` from `agentops.yaml`:
 
 ```
 risk ≤ escalate_risk               → ALLOW
@@ -73,7 +73,7 @@ Thresholds are configuration, not code — raise `escalate_risk` to reduce the h
 
 ### Phase 3 — Human approval (`domain/approvals.py`)
 
-This is the phase most gateways skip, and where AetherWall differs from traffic-shaping. OWASP's agentic catalog explicitly lists *human-in-the-loop weakness* as a threat class, because an "escalation" that then routes anyway is worse than no escalation — it teaches attackers that entering the zone is free.
+This is the phase most gateways skip, and where AgentOps differs from traffic-shaping. OWASP's agentic catalog explicitly lists *human-in-the-loop weakness* as a threat class, because an "escalation" that then routes anyway is worse than no escalation — it teaches attackers that entering the zone is free.
 
 ESCAlATEd requests are therefore **never auto-routed**. `ApprovalStore` holds the full original `AgentRequest` + `ValidationResult` + security analysis:
 
@@ -83,7 +83,7 @@ ESCAlATEd requests are therefore **never auto-routed**. `ApprovalStore` holds th
 
 ### Phase 4 — Routing and output check
 
-Approved requests are forwarded through APISIX (edge routing, mTLS) with identity/decision headers (`X-AetherWall-Agent-ID`, `X-AetherWall-Request-ID`, `X-AetherWall-Decision`). Then, if `security.verify_responses: true`, the **return path** is scanned (`/analyze/output`): responses are a live attack channel (exfiltrated data, malicious content, instruction injection flowing back to the agent — OWASP LLM02/LLM05). Output violations cannot recall an already-delivered response, so they're flagged loudly in the log/audit rather than misreported as blocked.
+Approved requests are forwarded through APISIX (edge routing, mTLS) with identity/decision headers (`X-AgentOps-Agent-ID`, `X-AgentOps-Request-ID`, `X-AgentOps-Decision`). Then, if `security.verify_responses: true`, the **return path** is scanned (`/analyze/output`): responses are a live attack channel (exfiltrated data, malicious content, instruction injection flowing back to the agent — OWASP LLM02/LLM05). Output violations cannot recall an already-delivered response, so they're flagged loudly in the log/audit rather than misreported as blocked.
 
 ### Audit — everything is recorded
 
@@ -92,7 +92,7 @@ Every allowed, denied, escalated, and review decision is written to Qdrant as a 
 ## 3. Design principles
 
 1. **Clean architecture / hexagonal.** `domain/` knows nothing about FastAPI, APISIX, or LangChain. The pipeline depends purely on the three intrinsic ports (`interfaces/`). Concrete adapters are wired in one place (`api/dependencies.py`) and swapped without touching the pipeline.
-2. **Declarative governance.** All policy lives in `aether.yaml` (v1.1). Governance behaviour is configuration: thresholds, fail modes, kill switches, spend caps, approval settings. No code changes to change policy.
+2. **Declarative governance.** All policy lives in `agentops.yaml` (v1.1). Governance behaviour is configuration: thresholds, fail modes, kill switches, spend caps, approval settings. No code changes to change policy.
 3. **Cheap checks first, expensive checks last.** Everything in Phase 0 is deterministic and O(1)-ish; the LLM council only sees what everything cheap missed. This keeps per-request latency and inference cost down.
 4. **Deny by default, evidence always.** Unknown agents, unknown tools, unknown destinations → DENY. Known or unknown, everything gets an audit entry.
 5. **Graduated response.** Block, redact, escalate — not just binary accept/reject. A moderate-risk destructive SQL request deserve human eyes, not an auto-kill that hides the forensic context.
@@ -106,7 +106,7 @@ Every allowed, denied, escalated, and review decision is written to Qdrant as a 
 
 | Question | File |
 |---|---|
-| Orchestration order and phases | `src/aetherwall/domain/gateway.py::GatewayPipeline.process_request` |
+| Orchestration order and phases | `src/agentops/domain/gateway.py::GatewayPipeline.process_request` |
 | What is/should be denied | `gateway.py::_run_identity_gate`, `_run_policy_gate`, `_run_limits` |
 | Why a request was escalated | `council/validator_council.py` (Risk/Context/Arbiter nodes) |
 | What happens on ESCALATE | `domain/approvals.py`, `gateway.py::resolve_approval` |

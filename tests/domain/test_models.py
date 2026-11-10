@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from aetherwall.domain.models import (
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     GatewayResponse,

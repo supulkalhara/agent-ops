@@ -1,14 +1,14 @@
 import pytest
 
-from aetherwall.domain.models import (
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     SecurityAnalysis,
     ValidationResult,
 )
-from aetherwall.interfaces.router import APIRouterInterface
-from aetherwall.interfaces.validator import CoreGatewayValidatorInterface
-from aetherwall.interfaces.verifier import SecurityVerifierInterface
+from agent_ops.interfaces.router import APIRouterInterface
+from agent_ops.interfaces.validator import CoreGatewayValidatorInterface
+from agent_ops.interfaces.verifier import SecurityVerifierInterface
 
 
 class MockRouter(APIRouterInterface):

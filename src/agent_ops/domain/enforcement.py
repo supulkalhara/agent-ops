@@ -29,7 +29,7 @@ def parse_rate_limit(spec: str) -> tuple[int, int]:
     """
     Parse a rate-limit spec of the form ``<n>_<unit>(s)_per_<unit>``.
 
-    Supported forms (the unit used in `aether.yaml` uses underscores):
+    Supported forms (the unit used in `agentops.yaml` uses underscores):
       • ``100_requests_per_minute``   → (100, 60)
       • ``50_calls_per_hour``         → (50, 3600)
 

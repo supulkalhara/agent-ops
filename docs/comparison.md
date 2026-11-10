@@ -1,6 +1,6 @@
-# Market Landscape: Agent Governance Frameworks (Nov 2026) — and Where AetherWall Fits
+# Market Landscape: Agent Governance Frameworks (Nov 2026) — and Where AgentOps Fits
 
-This is the market research behind AetherWall's v1.1 governance layer: what exists, what it does well, what it leaves as gaps, and which capabilities were adopted into AetherWall as a result. Sources were verified against live vendor/docs pages in November 2026.
+This is the market research behind AgentOps's v1.1 governance layer: what exists, what it does well, what it leaves as gaps, and which capabilities were adopted into AgentOps as a result. Sources were verified against live vendor/docs pages in November 2026.
 
 ---
 
@@ -64,9 +64,9 @@ Everything in that list is SaaS or cloud-locked — **none of it is open and sel
 
 ---
 
-## 2. Capability matrix: AetherWall vs the field
+## 2. Capability matrix: AgentOps vs the field
 
-| Capability | AetherWall v1.1 | agentgateway | LiteLLM | Portkey | AgentCore | Prisma AIRS / CrowdStrike / Entra | watsonx.governance |
+| Capability | AgentOps v1.1 | agentgateway | LiteLLM | Portkey | AgentCore | Prisma AIRS / CrowdStrike / Entra | watsonx.governance |
 |---|---|---|---|---|---|---|---|
 | Agent identity verification | ● token-checked per request | ◐ (token budgets per key) | ● (virtual keys) | ● | ● | ● (crypto IDs) | ◐ |
 | Instant revocation / kill switch | ● per-agent + hot reload | ○ | ● | ◐ | ◐ | ● | ◐ |
@@ -90,13 +90,13 @@ Legend: ● native · ◐ partial/adjacent · — absent. Others' assessments us
 
 ---
 
-## 3. What this research changed in AetherWall (v1.1)
+## 3. What this research changed in AgentOps (v1.1)
 
 The comparison produced a concrete defect list and a concrete feature set; v1.1 fixes or adds each:
 
-| Finding in the market | Gap in AetherWall v1.0 | v1.1 fix |
+| Finding in the market | Gap in AgentOps v1.0 | v1.1 fix |
 |---|---|---|
-| Everyone (MCP spec, AgentCore, Entra, CrowdStrike) treats identity verification as the foundation; a self-asserted `agent_id` is untrustable | Connection existed but any request could claim any `agent_id` | `credential:` per connection + `X-Aetherwall-Auth` header; `${ENV_VAR}` resolution; hard config-error on missing secrets |
+| Everyone (MCP spec, AgentCore, Entra, CrowdStrike) treats identity verification as the foundation; a self-asserted `agent_id` is untrustable | Connection existed but any request could claim any `agent_id` | `credential:` per connection + `X-Agentops-Auth` header; `${ENV_VAR}` resolution; hard config-error on missing secrets |
 | Kill switch / revocation is table stakes in every 2026 product launch | Could only edit config and restart, agent's next request unaffected until restart | `enabled:` flag, `enabled:false` = instant deny, `POST /config/reload` |
 | Tool least-privilege: OPA/Cedar/OpenFGA power, AgentCore Dogwood intercepts *every* tool call; LiteLLM has tool policies | `mcp_tools_allowed` was never enforced (dead config) | Enforced in phase 0 whenever `metadata.tool_name` is present; empty list = no tools |
 | Budgets least-served capability market-wide | `rate_limit` declared but never enforced; no transaction value control | Sliding-window RateLimiter; `transaction_limit_usd`; UTC-day `daily_spend_limit_usd` ledger committing only on successful route |
@@ -109,18 +109,18 @@ The comparison produced a concrete defect list and a concrete feature set; v1.1 
 
 ## 4. Compliance mapping (draft)
 
-| Requirement | Where AetherWall evidences it |
+| Requirement | Where AgentOps evidences it |
 |---|---|
 | EU AI Act **Art. 14** (human oversight) | `governance.human_approval` + approval queue API; council arbiter escalation semantics |
 | EU AI Act **Art. 12** (logging/record-keeping) | every decision → Qdrant audit; monitor-mode rehearsal records; reviewer actions audited |
 | EU AI Act **Art. 15** (robustness/cybersecurity) | allow-lists, tool least-privilege, rate/spend caps, fail-closed default |
 | EU AI Act **Art. 50** (transparency) | not addressed — out of a traffic gateway's scope |
 | NIST AI RMF **Measure** | detection flags + confidence, council scores, `would_decision` telemetry |
-| NIST AI RMF **Govern/Manage** | `aether.yaml` as the auditable policy artefact; kill switch as rapid response |
+| NIST AI RMF **Govern/Manage** | `agentops.yaml` as the auditable policy artefact; kill switch as rapid response |
 | OWASP LLM10 / Agentic resource-overload | rate limits, daily spend caps |
 | OWASP LLM01/02 + Agentic identity spoofing | verifier scanners; per-connection credentials; default-deny |
 
-## 5. AetherWall's honest gaps (and a roadmap)
+## 5. AgentOps's honest gaps (and a roadmap)
 
 Ordered by what the market says buyers will hit first:
 
@@ -128,7 +128,7 @@ Ordered by what the market says buyers will hit first:
 2. **Policy-engine integration** — OPA/Rego or Cedar decision hooks behind the same phase-0 interface for orgs that have written policies there.
 3. **Durable approval store** — swap Redis/Postgres behind `ApprovalStore` for HA (interface is already swap-shaped).
 4. **Observability natively in OTel** — emit OTel GenAI/MCP spans alongside the Qdrant audit (Phoenix/AgentOps-compatible).
-5. **Supply-chain scanning** — Cisco mcp-scanner / Snyk Agent Scan-class checks of which MCP servers/tools are declared in `aether.yaml` (tool-reputation before phase-0 lets them through).
+5. **Supply-chain scanning** — Cisco mcp-scanner / Snyk Agent Scan-class checks of which MCP servers/tools are declared in `agentops.yaml` (tool-reputation before phase-0 lets them through).
 6. **Stronger crypto attribution** — mTLS or signed-claims (JWT with agent claims, e.g. LiteLLM's ID-JAG) rather than bearer tokens once the deployment deserves it.
 7. **Sandboxed egress** — E2B-class egress allow/deny at the network layer beneath destination allow-lists.
 8. **Rule evaluation upgrade** — replace keyword-scoring in the Context Agent with LLM-model rule adjudication (the intended next iteration of the council).

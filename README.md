@@ -2,11 +2,11 @@
 
 **The Open-Source Agent Governance Gateway**
 
-AetherWall is a self-hosted, edge-deployable gateway that governs every interaction between your agents and the outside world — other agents, MCP tools, and internal services. It sits between your agent fleet and everything else, and answers one question before any traffic flows: **should this agent be allowed to do this, under this policy, right now?**
+AgentOps is a self-hosted, edge-deployable gateway that governs every interaction between your agents and the outside world — other agents, MCP tools, and internal services. It sits between your agent fleet and everything else, and answers one question before any traffic flows: **should this agent be allowed to do this, under this policy, right now?**
 
 ```
 ┌──────────────────┐     ┌────────────────┐     ┌─────────────────────┐     ┌──────────────────┐
-│  Agents / MCP    │────▶│    AetherWall  │────▶│  Internal Services  │
+│  Agents / MCP    │────▶│    AgentOps  │────▶│  Internal Services  │
 │  External world  │◀────│  governed pipe │◀────│  / MCP Tools        │
 └──────────────────┘     │                │     └──────────────────┘
                          │  0 · Policy gate     ─ auth, kill switch, allow-lists, limits
@@ -18,11 +18,11 @@ AetherWall is a self-hosted, edge-deployable gateway that governs every interact
                          └────────────────┘
 ```
 
-## Why AetherWall
+## Why AgentOps
 
 Agent fleets fail in specific, well-documented ways — the [OWASP Agentic AI threat catalog](https://genai.owasp.org/resources/agentic-ai-threats-and-mitigations/) (identity spoofing, tool misuse, excessive agency, resource overload, human-in-the-loop weaknesses) and [MITRE ATLAS](https://atlas.mitre.org) both treat unmediated agent traffic as a primary attack surface. In 2026 the market response consolidated into two camps: **expensive SaaS platforms** (Palo Alto Prisma AIRS, Cisco AI Defense, Zscaler, CrowdStrike agentic identity) and **protocol standards** (MCP authorization, A2A) that define identity but enforce nothing.
 
-AetherWall is the missing third option: a **self-hostable enforcement point** you control. It takes the governance capabilities those platforms charge enterprise prices for — identity attestation, least-privilege tool authorization, spend limits, human approval workflows, kill switches, and an audit-ready decision log — and implements them in an open, declarative stack you can read, extend, and point at your own infrastructure. See [`docs/comparison.md`](docs/comparison.md) for the full market analysis.
+AgentOps is the missing third option: a **self-hostable enforcement point** you control. It takes the governance capabilities those platforms charge enterprise prices for — identity attestation, least-privilege tool authorization, spend limits, human approval workflows, kill switches, and an audit-ready decision log — and implements them in an open, declarative stack you can read, extend, and point at your own infrastructure. See [`docs/comparison.md`](docs/comparison.md) for the full market analysis.
 
 ## How it works
 
@@ -140,8 +140,8 @@ mypy src
 ## Project structure
 
 ```
-aetherwall/
-├── src/aetherwall/
+agentops/
+├── src/agentops/
 │   ├── domain/            # Framework-free core business logic
 │   │   ├── models.py      # Pydantic domain models (+ approvals)
 │   │   ├── config.py      # agentops.yaml parsing/validation (v1.0 + v1.1)
@@ -158,7 +158,7 @@ aetherwall/
 │   ├── guardrails.md      # Guardrail catalog & threat mapping
 │   ├── configuration.md   # agentops.yaml reference
 │   ├── api.md             # HTTP API reference
-│   └── comparison.md      # Market landscape vs AetherWall
+│   └── comparison.md      # Market landscape vs AgentOps
 ├── config/apisix/ + config/litellm/
 ├── agentops.yaml            # Gateway governance specification
 ├── docker-compose.yml     # Full 7-service stack
@@ -169,7 +169,7 @@ aetherwall/
 
 | Service | Purpose | Port |
 |---|---|---|
-| **AetherWall** | Core governance gateway | `8000` |
+| **AgentOps** | Core governance gateway | `8000` |
 | **APISIX** | Edge router | `9080` |
 | **LiteLLM** | LLM translation proxy | `4000` |
 | **Ollama** | Local LLM inference (council brain) | `11434` |
@@ -179,4 +179,4 @@ aetherwall/
 
 ## License
 
-MIT
+MIT — see [`LICENSE`](LICENSE). Fork it, embed it, sell services on it; keep the copyright notice.

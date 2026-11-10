@@ -19,8 +19,8 @@ from typing import Any
 
 import httpx
 
-from aetherwall.domain.models import AgentRequest, SecurityAnalysis
-from aetherwall.interfaces.verifier import SecurityVerifierInterface
+from agent_ops.domain.models import AgentRequest, SecurityAnalysis
+from agent_ops.interfaces.verifier import SecurityVerifierInterface
 
 logger = logging.getLogger(__name__)
 

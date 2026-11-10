@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aetherwall.domain.config import (
+from agent_ops.domain.config import (
     ConnectionSpec,
     GatewayConfig,
     PIIRedactionConfig,
@@ -16,7 +16,7 @@ from aetherwall.domain.config import (
 )
 
 SAMPLE_YAML = """\
-aetherwall_gateway:
+agentops_gateway:
   version: "1.0"
 
   routing:
@@ -104,7 +104,7 @@ class TestLoadConfig:
     """Tests for YAML config loading."""
 
     def test_load_full_config(self, tmp_path: Path) -> None:
-        config_file = tmp_path / "aether.yaml"
+        config_file = tmp_path / "agentops.yaml"
         config_file.write_text(SAMPLE_YAML)
 
         config = load_config(config_file)
@@ -123,8 +123,8 @@ class TestLoadConfig:
             load_config("/nonexistent/path.yaml")
 
     def test_load_minimal_config(self, tmp_path: Path) -> None:
-        config_file = tmp_path / "aether.yaml"
-        config_file.write_text("aetherwall_gateway:\n  version: '1.0'\n")
+        config_file = tmp_path / "agentops.yaml"
+        config_file.write_text("agentops_gateway:\n  version: '1.0'\n")
         config = load_config(config_file)
         assert config.version == "1.0"
         assert config.connections == []

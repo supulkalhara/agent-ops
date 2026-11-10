@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-from aetherwall.domain.models import AgentRequest, SecurityAnalysis, ValidationResult
+from agent_ops.domain.models import AgentRequest, SecurityAnalysis, ValidationResult
 
 
 class CoreGatewayValidatorInterface(ABC):

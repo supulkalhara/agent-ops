@@ -6,7 +6,7 @@ The gateway exposes a small, governance-focused surface. Everything funnels thro
 
 Run one agent request through the governed pipeline.
 
-**Auth header (optional):** `X-Aetherwall-Auth: <token>` — required whenever the connection in `aether.yaml` declares a `credential`; a missing or mismatched header yields decision `deny` (*Authentication failed*) rather than an error leak.
+**Auth header (optional):** `X-Agentops-Auth: <token>` — required whenever the connection in `agentops.yaml` declares a `credential`; a missing or mismatched header yields decision `deny` (*Authentication failed*) rather than an error leak.
 
 ```jsonc
 // Request body
@@ -105,13 +105,13 @@ Approving an expired approval settles it per the `on_timeout` policy instead —
 
 ## `POST /config/reload`
 
-Hot-reload `aether.yaml` without restarting:
+Hot-reload `agentops.yaml` without restarting:
 
 ```jsonc
 { "status": "reloaded", "config_version": "1.1" }
 ```
 
-Use it for the kill-switch and policy-change flows: edit `aether.yaml`, flip `enabled: false` for a burned agent, reload. Failed reloads return `500` and keep the previous config.
+Use it for the kill-switch and policy-change flows: edit `agentops.yaml`, flip `enabled: false` for a burned agent, reload. Failed reloads return `500` and keep the previous config.
 
 ---
 

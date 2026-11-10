@@ -1,7 +1,7 @@
 """
-Configuration models for AetherWall gateway deployment.
+Configuration models for AgentOps gateway deployment.
 
-Parses and validates the declarative `aether.yaml` spec that controls
+Parses and validates the declarative `agentops.yaml` spec that controls
 how internal agents interact with external entities, including security
 policies, rate limits, spend limits, human-approval settings, and
 validation council rules.
@@ -155,7 +155,7 @@ class RoutingConfig(BaseModel):
 
 class GatewayConfig(BaseModel):
     """
-    Root configuration model for `aether.yaml`.
+    Root configuration model for `agentops.yaml`.
 
     This is the single source of truth for all gateway behaviour — routing
     policies, connection specs, security settings, governance defaults,
@@ -237,7 +237,7 @@ def expand_env_ref(value: str, name: str) -> str:
     env_var = match.group(1)
     resolved = os.environ.get(env_var)
     if resolved is None:
-        from aetherwall.domain.exceptions import ConfigurationError
+        from agent_ops.domain.exceptions import ConfigurationError
 
         raise ConfigurationError(
             f"Connection '{name}' references secret ${{{env_var}}} "
@@ -255,8 +255,11 @@ def load_config(path: str | Path) -> GatewayConfig:
     with open(path) as f:
         raw: dict[str, Any] = yaml.safe_load(f)
 
-    # The YAML may nest everything under `aetherwall_gateway`
-    if "aetherwall_gateway" in raw:
+    # Accept both spec root keys: `agentops_gateway` (current) and the
+    # legacy `aetherwall_gateway` from the pre-rename AetherWall era.
+    if "agentops_gateway" in raw:
+        raw = raw["agentops_gateway"]
+    elif "aetherwall_gateway" in raw:
         raw = raw["aetherwall_gateway"]
 
     config = GatewayConfig(**raw)

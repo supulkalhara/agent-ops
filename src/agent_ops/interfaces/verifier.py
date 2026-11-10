@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from aetherwall.domain.models import AgentRequest, SecurityAnalysis
+from agent_ops.domain.models import AgentRequest, SecurityAnalysis
 
 # Infrastructure-unavailability flags emitted by verifier adapters.
 INFRASTRUCTURE_FLAGS = frozenset({"llm_guard_error", "llm_guard_unreachable"})
@@ -13,7 +13,7 @@ class SecurityVerifierInterface(ABC):
     Covers both directions of agent traffic:
       • ``verify_payload`` — inbound requests (prompt side)
       • ``verify_output``  — outbound responses (return path), used when
-        ``security.verify_responses`` is enabled in `aether.yaml`.
+        ``security.verify_responses`` is enabled in `agentops.yaml`.
     """
 
     @abstractmethod

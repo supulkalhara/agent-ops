@@ -1,16 +1,16 @@
 """
-Custom domain exceptions for AetherWall.
+Custom domain exceptions for AgentOps.
 
-All gateway-specific errors inherit from AetherWallError to allow
+All gateway-specific errors inherit from AgentOpsError to allow
 consumers to catch them at the top-level in a single except clause.
 """
 
 
-class AetherWallError(Exception):
-    """Base exception for all AetherWall domain errors."""
+class AgentOpsError(Exception):
+    """Base exception for all AgentOps domain errors."""
 
 
-class SecurityViolationError(AetherWallError):
+class SecurityViolationError(AgentOpsError):
     """Raised when the verifier detects a critical security threat."""
 
     def __init__(self, flags: list[str], confidence: float) -> None:
@@ -21,7 +21,7 @@ class SecurityViolationError(AetherWallError):
         )
 
 
-class ValidationRejectedError(AetherWallError):
+class ValidationRejectedError(AgentOpsError):
     """Raised when the validation council rejects a request."""
 
     def __init__(self, reasoning: str) -> None:
@@ -29,7 +29,7 @@ class ValidationRejectedError(AetherWallError):
         super().__init__(f"Validation council rejected request: {reasoning}")
 
 
-class RoutingError(AetherWallError):
+class RoutingError(AgentOpsError):
     """Raised when routing fails due to an unreachable or disallowed destination."""
 
     def __init__(self, destination: str, reason: str) -> None:
@@ -38,8 +38,8 @@ class RoutingError(AetherWallError):
         super().__init__(f"Routing to '{destination}' failed: {reason}")
 
 
-class ConfigurationError(AetherWallError):
-    """Raised when the gateway configuration (aether.yaml) is invalid."""
+class ConfigurationError(AgentOpsError):
+    """Raised when the gateway configuration (agentops.yaml) is invalid."""
 
     def __init__(self, detail: str) -> None:
         self.detail = detail

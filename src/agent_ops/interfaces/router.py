@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from aetherwall.domain.models import AgentRequest, ValidationResult
+from agent_ops.domain.models import AgentRequest, ValidationResult
 
 
 class APIRouterInterface(ABC):

@@ -1,8 +1,8 @@
 # ─────────────────────────────────────────────────────────────
-# AetherWall — Full Stack Docker Compose
+# AgentOps — Full Stack Docker Compose
 #
 # Services:
-#   aetherwall   — Core FastAPI gateway (our code)
+#   agentops   — Core FastAPI gateway (our code)
 #   apisix       — Edge router / API gateway
 #   etcd         — APISIX config store
 #   litellm      — LLM translation proxy
@@ -12,26 +12,26 @@
 # ─────────────────────────────────────────────────────────────
 
 services:
-  # ── AetherWall Core Gateway ──────────────────────────────
-  aetherwall:
+  # ── AgentOps Core Gateway ──────────────────────────────
+  agentops:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: aetherwall
+    container_name: agentops
     restart: unless-stopped
     ports:
       - "8000:8000"
     env_file:
       - .env
     volumes:
-      - ./aether.yaml:/etc/aetherwall/aether.yaml:ro
+      - ./agentops.yaml:/etc/agentops/agentops.yaml:ro
     depends_on:
       qdrant:
         condition: service_healthy
       litellm:
         condition: service_started
     networks:
-      - aether-net
+      - agentops-net
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
       interval: 30s
@@ -54,7 +54,7 @@ services:
       etcd:
         condition: service_healthy
     networks:
-      - aether-net
+      - agentops-net
 
   # ── etcd — APISIX Configuration Store ───────────────────
   etcd:
@@ -68,7 +68,7 @@ services:
     volumes:
       - etcd-data:/bitnami/etcd
     networks:
-      - aether-net
+      - agentops-net
     healthcheck:
       test: ["CMD", "etcdctl", "endpoint", "health"]
       interval: 15s
@@ -89,7 +89,7 @@ services:
       - ./config/litellm/config.yaml:/app/config.yaml:ro
     command: ["--config", "/app/config.yaml", "--port", "4000"]
     networks:
-      - aether-net
+      - agentops-net
 
   # ── Ollama — Local LLM Inference ─────────────────────────
   ollama:
@@ -101,7 +101,7 @@ services:
     volumes:
       - ollama-data:/root/.ollama
     networks:
-      - aether-net
+      - agentops-net
     # GPU passthrough (uncomment for NVIDIA GPU support)
     # deploy:
     #   resources:
@@ -124,7 +124,7 @@ services:
     volumes:
       - qdrant-data:/qdrant/storage
     networks:
-      - aether-net
+      - agentops-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
       interval: 15s
@@ -143,7 +143,7 @@ services:
       SCAN_PROMPT_ENABLED: "true"
       SCAN_OUTPUT_ENABLED: "true"
     networks:
-      - aether-net
+      - agentops-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
       interval: 30s
@@ -161,6 +161,6 @@ volumes:
 
 # ── Network ────────────────────────────────────────────────
 networks:
-  aether-net:
+  agentops-net:
     driver: bridge
-    name: aether-net
+    name: agentops-net

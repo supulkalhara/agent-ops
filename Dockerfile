@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────
-# AetherWall: Multi-stage Dockerfile
+# AgentOps: Multi-stage Dockerfile
 #
 # Stage 1 (builder): Install all deps in a venv with full build tools
 # Stage 2 (runtime): Minimal distroless-style image with only the venv
@@ -31,24 +31,24 @@ RUN pip install --no-cache-dir .
 # ── Stage 2: Runtime ─────────────────────────────────────────────────
 FROM python:3.14-slim AS runtime
 
-LABEL maintainer="AetherWall Team"
-LABEL description="AetherWall — Enterprise Agent-to-[Agent/MCP] Gateway"
+LABEL maintainer="AgentOps Team"
+LABEL description="AgentOps — Enterprise Agent-to-[Agent/MCP] Gateway"
 
 # Non-root user for security hardening
-RUN groupadd --gid 1000 aether && \
-    useradd --uid 1000 --gid aether --shell /bin/false aether
+RUN groupadd --gid 1000 agentops && \
+    useradd --uid 1000 --gid agentops --shell /bin/false agentops
 
 # Copy the pre-built venv from builder (includes all deps + package)
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy the config skeleton (users mount their own at runtime)
-COPY aether.yaml /etc/aetherwall/aether.yaml
+COPY agentops.yaml /etc/agentops/agentops.yaml
 
 WORKDIR /app
 
 # Switch to non-root
-USER aether
+USER agentops
 
 EXPOSE 8000
 
@@ -56,5 +56,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')" || exit 1
 
-ENTRYPOINT ["uvicorn", "aetherwall.api.app:app"]
+ENTRYPOINT ["uvicorn", "agent_ops.api.app:app"]
 CMD ["--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

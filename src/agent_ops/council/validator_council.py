@@ -15,7 +15,7 @@ Their assessments flow through a LangGraph StateGraph:
     └───────────┘     └───────────────┘     └────────────────┘     └──────────┘
 
 The **Arbiter** node makes the final decision based on both assessments
-and the configured policy rules from ``aether.yaml``.
+and the configured policy rules from ``agentops.yaml``.
 
 All LLM calls go through LiteLLM, keeping the council decoupled from
 any specific provider.
@@ -29,14 +29,14 @@ from typing import Any, TypedDict
 
 from langgraph.graph import END, StateGraph
 
-from aetherwall.domain.config import GatewayConfig
-from aetherwall.domain.models import (
+from agent_ops.domain.config import GatewayConfig
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     SecurityAnalysis,
     ValidationResult,
 )
-from aetherwall.interfaces.validator import CoreGatewayValidatorInterface
+from agent_ops.interfaces.validator import CoreGatewayValidatorInterface
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class CouncilState(TypedDict):
     context: dict[str, Any]
     rules: list[str]
 
-    # Governance thresholds (from aether.yaml governance.decision_thresholds)
+    # Governance thresholds (from agentops.yaml governance.decision_thresholds)
     deny_risk: float
     escalate_risk: float
 
@@ -187,7 +187,7 @@ async def _arbiter_node(state: CouncilState) -> dict[str, Any]:
     """
     Arbiter — makes the final decision based on both agents' assessments.
 
-    Thresholds come from `aether.yaml` governance.decision_thresholds
+    Thresholds come from `agentops.yaml` governance.decision_thresholds
     (with safe defaults for direct node calls):
 
     Decision matrix (deny_risk=0.7, escalate_risk=0.3):

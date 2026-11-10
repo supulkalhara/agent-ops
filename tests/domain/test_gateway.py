@@ -7,22 +7,22 @@ never hit real LLM, vector DB, or routing infrastructure.
 
 import pytest
 
-from aetherwall.domain.config import ConnectionSpec, GatewayConfig
-from aetherwall.domain.exceptions import (
+from agent_ops.domain.config import ConnectionSpec, GatewayConfig
+from agent_ops.domain.exceptions import (
     RoutingError,
     SecurityViolationError,
     ValidationRejectedError,
 )
-from aetherwall.domain.gateway import GatewayPipeline
-from aetherwall.domain.models import (
+from agent_ops.domain.gateway import GatewayPipeline
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     SecurityAnalysis,
     ValidationResult,
 )
-from aetherwall.interfaces.router import APIRouterInterface
-from aetherwall.interfaces.validator import CoreGatewayValidatorInterface
-from aetherwall.interfaces.verifier import SecurityVerifierInterface
+from agent_ops.interfaces.router import APIRouterInterface
+from agent_ops.interfaces.validator import CoreGatewayValidatorInterface
+from agent_ops.interfaces.verifier import SecurityVerifierInterface
 
 # ── Test Doubles ──────────────────────────────────────────────────────
 

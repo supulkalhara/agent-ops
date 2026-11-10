@@ -25,7 +25,7 @@ from qdrant_client.models import (
     VectorParams,
 )
 
-from aetherwall.domain.models import GatewayResponse
+from agent_ops.domain.models import GatewayResponse
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class QdrantAuditLogger:
     host: str = "qdrant"
     port: int = 6333
     api_key: str = ""
-    collection_name: str = "aetherwall_audit"
+    collection_name: str = "agent_ops_audit"
     _client: AsyncQdrantClient | None = None
 
     async def _ensure_client(self) -> AsyncQdrantClient:

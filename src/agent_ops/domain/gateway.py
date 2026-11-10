@@ -1,5 +1,5 @@
 """
-Core gateway pipeline — the heart of AetherWall.
+Core gateway pipeline — the heart of AgentOps.
 
 Orchestrates the governed security flow:
 
@@ -23,22 +23,22 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from aetherwall.domain.approvals import (
+from agent_ops.domain.approvals import (
     ApprovalExpiredError,
     ApprovalStore,
 )
-from aetherwall.domain.config import ConnectionSpec, GatewayConfig
-from aetherwall.domain.enforcement import (
+from agent_ops.domain.config import ConnectionSpec, GatewayConfig
+from agent_ops.domain.enforcement import (
     RateLimiter,
     SpendLedger,
     parse_rate_limit,
 )
-from aetherwall.domain.exceptions import (
+from agent_ops.domain.exceptions import (
     RoutingError,
     SecurityViolationError,
     ValidationRejectedError,
 )
-from aetherwall.domain.models import (
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     ApprovalRecord,
@@ -46,9 +46,9 @@ from aetherwall.domain.models import (
     SecurityAnalysis,
     ValidationResult,
 )
-from aetherwall.interfaces.router import APIRouterInterface
-from aetherwall.interfaces.validator import CoreGatewayValidatorInterface
-from aetherwall.interfaces.verifier import SecurityVerifierInterface
+from agent_ops.interfaces.router import APIRouterInterface
+from agent_ops.interfaces.validator import CoreGatewayValidatorInterface
+from agent_ops.interfaces.verifier import SecurityVerifierInterface
 
 logger = logging.getLogger(__name__)
 

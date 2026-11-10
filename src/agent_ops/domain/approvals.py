@@ -14,7 +14,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from aetherwall.domain.models import (
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     ApprovalRecord,

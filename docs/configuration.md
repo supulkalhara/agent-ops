@@ -1,9 +1,9 @@
-# `aether.yaml` — Configuration Reference
+# `agentops.yaml` — Configuration Reference
 
 Spec version **1.1** (fully backward compatible with **1.0** — a 1.0 file loads unchanged, with sensible governance defaults). Everything below the four original sections is optional; unlisted fields fall back to safe defaults.
 
 ```yaml
-aetherwall_gateway:        # top-level key (required)
+agentops_gateway:        # top-level key (required)
   version: "1.1"           # "1.0" | "1.1"
 ```
 
@@ -56,7 +56,7 @@ connections:
 | Field | Required | Meaning |
 |---|---|---|
 | `agent_identity` | ✔ | The identity the caller must present as `agent_id`. Unknown identities are DENYed by default. |
-| `credential` | — | Secret token checked against the `X-Aetherwall-Auth` header. Supports `${ENV_VAR}` references, resolved at load time; a missing variable is a **hard configuration error**. Empty string = authentication disabled for this agent. |
+| `credential` | — | Secret token checked against the `X-Agentops-Auth` header. Supports `${ENV_VAR}` references, resolved at load time; a missing variable is a **hard configuration error**. Empty string = authentication disabled for this agent. |
 | `enabled` | — | Kill switch. `false` → immediate DENY on next request, in every mode. Apply changes with `POST /config/reload`. |
 | `mode` | — | Per-connection override of `governance.default_mode`. Connection-level `monitor` overrides global `enforce`; connection-level `enforce` on a monitor-adopting gateway restores enforcement, etc. |
 | `allowed_external` | — | Exact-match destination allow-list. Anything else is DENYed, even in monitor mode. |
@@ -69,7 +69,7 @@ Semantics worth remembering:
 
 - **`monitor` never disables the identity layer.** Allow-lists and the kill switch are enforced regardless of mode; monitor only relaxes detection/content/council blocking and resource caps (taken log-only instead).
 - **Spend checks require the caller to declare the amount.** Amount comes from client metadata: honor it only after authentication, and treat it as a policy input, not a source of truth.
-- Two fields reference env vars by design — credentials and nothing else. Never inline production tokens in `aether.yaml`.
+- Two fields reference env vars by design — credentials and nothing else. Never inline production tokens in `agentops.yaml`.
 
 ---
 
@@ -136,9 +136,9 @@ Advisory wiring hints consumed by the deployment templates in `config/apisix/` a
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `AETHERWALL_CONFIG_PATH` | `/etc/aetherwall/aether.yaml` | Where to find the governing spec. |
-| `AETHERWALL_SECURITY_THRESHOLD` | `0.7` | Verification confidence above which is treated as a hard detection. |
-| `AETHERWALL_LOG_LEVEL` | `INFO` | Log verbosity. |
+| `AGENTOPS_CONFIG_PATH` | `/etc/agentops/agentops.yaml` | Where to find the governing spec. |
+| `AGENTOPS_SECURITY_THRESHOLD` | `0.7` | Verification confidence above which is treated as a hard detection. |
+| `AGENTOPS_LOG_LEVEL` | `INFO` | Log verbosity. |
 | `LLM_GUARD_API` | `http://llm-guard:8080` | Scanner endpoint. |
 | `LLM_GUARD_TIMEOUT` | `10` | Scanner HTTP timeout (seconds). |
 | `APISIX_ADMIN_API` / `APISIX_ADMIN_KEY` | / | APISIX control-plane. |

@@ -12,13 +12,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from aetherwall.adapters.apisix_router import APISIXRouter
-from aetherwall.adapters.llm_guard_verifier import LLMGuardVerifier
-from aetherwall.adapters.qdrant_logger import (
+from agent_ops.adapters.apisix_router import APISIXRouter
+from agent_ops.adapters.llm_guard_verifier import LLMGuardVerifier
+from agent_ops.adapters.qdrant_logger import (
     QdrantAuditLogger,
     _payload_to_vector,
 )
-from aetherwall.domain.models import (
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     GatewayResponse,
@@ -216,7 +216,7 @@ class TestAPISIXRouter:
 
     @pytest.mark.asyncio
     async def test_route_request_attaches_headers(self) -> None:
-        """Verify AetherWall headers are sent."""
+        """Verify AgentOps headers are sent."""
         router = APISIXRouter(proxy_url="http://test:9080")
         req = _make_request()
         val = ValidationResult(
@@ -243,9 +243,9 @@ class TestAPISIXRouter:
             await router.route_request(req, val)
 
         headers = captured_kwargs.get("headers", {})
-        assert headers["X-AetherWall-Agent-ID"] == "test-agent"
-        assert headers["X-AetherWall-Decision"] == "allow"
-        assert "X-AetherWall-Request-ID" in headers
+        assert headers["X-AgentOps-Agent-ID"] == "test-agent"
+        assert headers["X-AgentOps-Decision"] == "allow"
+        assert "X-AgentOps-Request-ID" in headers
 
     @pytest.mark.asyncio
     async def test_block_request_logs(

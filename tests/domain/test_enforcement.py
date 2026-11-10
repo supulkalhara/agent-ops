@@ -4,7 +4,7 @@ Tests for the enforcement primitives (rate limiting, spend ledger).
 
 import pytest
 
-from aetherwall.domain.enforcement import (
+from agent_ops.domain.enforcement import (
     RateLimiter,
     SpendLedger,
     parse_rate_limit,

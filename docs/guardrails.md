@@ -1,6 +1,6 @@
 # Guardrails Catalog
 
-Every guardrail AetherWall ships, how to configure it, what it defends against, and the method it fails-safe under.
+Every guardrail AgentOps ships, how to configure it, what it defends against, and the method it fails-safe under.
 
 Legends for mapping: **[OWASP-A]** = [OWASP Agentic AI Threats & Mitigations](https://genai.owasp.org/resources/agentic-ai-threats-and-mitigations/) threat class · **[OWASP-LLM]** = [OWASP Top 10 for LLM Apps](https://genai.owasp.org) · **[ATLAS]** = MITRE ATLAS technique family · **[MCP]** = MCP security best-practice guidance.
 
@@ -10,7 +10,7 @@ Legends for mapping: **[OWASP-A]** = [OWASP Agentic AI Threats & Mitigations](ht
 
 ### 1.1 Agent authentication
 - **Config:** `connections[].credential: "${ENV_VAR_OR_LITERAL}"` (empty = auth not required).
-- **Behavior:** caller must present the matching token in `X-Aetherwall-Auth`. Credentials support `${ENV_VAR}` references resolved at load time; a missing env var is a hard configuration error (never silently disable auth).
+- **Behavior:** caller must present the matching token in `X-Agentops-Auth`. Credentials support `${ENV_VAR}` references resolved at load time; a missing env var is a hard configuration error (never silently disable auth).
 - **Defends against:** identity spoofing [OWASP-A], repudiation [OWASP-A] — every decision is attributable to a verified principal, not a self-asserted `agent_id`. This is the scoped-down, gateway-centric version of what enterprise products now sell as "Agent Identity".
 - **Fails safe when:** token missing/mismatched → DENY.
 
@@ -56,7 +56,7 @@ Legends for mapping: **[OWASP-A]** = [OWASP Agentic AI Threats & Mitigations](ht
 ## 4. Content guardrails
 
 ### 4.1 Inbound payload scanning (request path)
-- **Config:** `security.pii_redaction.{enabled,engine,block_entities}`; global threshold via `AETHERWALL_SECURITY_THRESHOLD` env (default 0.7).
+- **Config:** `security.pii_redaction.{enabled,engine,block_entities}`; global threshold via `AGENTOPS_SECURITY_THRESHOLD` env (default 0.7).
 - **Behavior:** LLM Guard scans for prompt injection, jailbreaks, PII, secrets, toxic/gibberish content; produces flags, a confidence score, and (when a scanner supports it) a redacted payload the pipeline routes downstream.
 - **Defends against:** prompt injection [OWASP-LLM01, OWASP-A], sensitive data in transit [OWASP-LLM02], jailbreaks [ATLAS].
 

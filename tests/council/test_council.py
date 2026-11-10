@@ -12,15 +12,15 @@ from __future__ import annotations
 
 import pytest
 
-from aetherwall.council.validator_council import (
+from agent_ops.council.validator_council import (
     ValidatorCouncil,
     _arbiter_node,
     _context_agent_node,
     _risk_agent_node,
     build_council_graph,
 )
-from aetherwall.domain.config import GatewayConfig, ValidationCouncilConfig
-from aetherwall.domain.models import (
+from agent_ops.domain.config import GatewayConfig, ValidationCouncilConfig
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     SecurityAnalysis,

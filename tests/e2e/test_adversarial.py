@@ -23,17 +23,17 @@ from typing import Any
 
 import pytest
 
-from aetherwall.council.validator_council import ValidatorCouncil
-from aetherwall.domain.config import ConnectionSpec, GatewayConfig
-from aetherwall.domain.gateway import GatewayPipeline
-from aetherwall.domain.models import (
+from agent_ops.council.validator_council import ValidatorCouncil
+from agent_ops.domain.config import ConnectionSpec, GatewayConfig
+from agent_ops.domain.gateway import GatewayPipeline
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     SecurityAnalysis,
     ValidationResult,
 )
-from aetherwall.interfaces.router import APIRouterInterface
-from aetherwall.interfaces.verifier import SecurityVerifierInterface
+from agent_ops.interfaces.router import APIRouterInterface
+from agent_ops.interfaces.verifier import SecurityVerifierInterface
 
 # ── Realistic Test Doubles ────────────────────────────────────────────
 
@@ -139,7 +139,7 @@ class RecordingRouter(APIRouterInterface):
 
 def _e2e_config() -> GatewayConfig:
     """Realistic gateway config with multiple agents and rules."""
-    from aetherwall.domain.config import ValidationCouncilConfig
+    from agent_ops.domain.config import ValidationCouncilConfig
 
     return GatewayConfig(
         connections=[
@@ -232,7 +232,7 @@ class TestE2EPromptInjection:
     @pytest.mark.asyncio
     async def test_direct_injection_blocked(self) -> None:
         """Direct prompt injection → SecurityViolationError."""
-        from aetherwall.domain.exceptions import SecurityViolationError
+        from agent_ops.domain.exceptions import SecurityViolationError
 
         pipeline, router = _e2e_pipeline()
 
@@ -256,7 +256,7 @@ class TestE2EPromptInjection:
     @pytest.mark.asyncio
     async def test_jailbreak_attempt_blocked(self) -> None:
         """Jailbreak attempt → blocked."""
-        from aetherwall.domain.exceptions import SecurityViolationError
+        from agent_ops.domain.exceptions import SecurityViolationError
 
         pipeline, router = _e2e_pipeline()
 
@@ -279,7 +279,7 @@ class TestE2ETopologyProbing:
     @pytest.mark.asyncio
     async def test_topology_probe_denied(self) -> None:
         """Attempt to map internal network → DENY by council."""
-        from aetherwall.domain.exceptions import ValidationRejectedError
+        from agent_ops.domain.exceptions import ValidationRejectedError
 
         pipeline, router = _e2e_pipeline()
 
@@ -305,7 +305,7 @@ class TestE2ECredentialEnumeration:
     @pytest.mark.asyncio
     async def test_user_enumeration_denied(self) -> None:
         """Attempt to list all users → DENY."""
-        from aetherwall.domain.exceptions import ValidationRejectedError
+        from agent_ops.domain.exceptions import ValidationRejectedError
 
         pipeline, router = _e2e_pipeline()
 
@@ -324,7 +324,7 @@ class TestE2ECredentialEnumeration:
     @pytest.mark.asyncio
     async def test_pii_exfiltration_blocked(self) -> None:
         """Attempt to extract PII → SecurityViolationError."""
-        from aetherwall.domain.exceptions import SecurityViolationError
+        from agent_ops.domain.exceptions import SecurityViolationError
 
         pipeline, router = _e2e_pipeline()
 
@@ -402,7 +402,7 @@ class TestE2EMultiPhaseAttack:
         Attacker wraps a malicious payload in innocent-looking context.
         The payload contains 'password' which triggers PII detection.
         """
-        from aetherwall.domain.exceptions import SecurityViolationError
+        from agent_ops.domain.exceptions import SecurityViolationError
 
         pipeline, router = _e2e_pipeline()
 
@@ -464,7 +464,7 @@ class TestE2EMultiPhaseAttack:
         wire, admin) → risk > 0.7 → DENY by council.
         Avoids PII patterns so it's caught by the council, not verifier.
         """
-        from aetherwall.domain.exceptions import ValidationRejectedError
+        from agent_ops.domain.exceptions import ValidationRejectedError
 
         pipeline, router = _e2e_pipeline()
 

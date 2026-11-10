@@ -12,26 +12,26 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from aetherwall.domain.approvals import (
+from agent_ops.domain.approvals import (
     ApprovalExpiredError,
     ApprovalStateError,
 )
-from aetherwall.domain.config import (
+from agent_ops.domain.config import (
     ConnectionSpec,
     GatewayConfig,
     GovernanceConfig,
     load_config,
 )
-from aetherwall.domain.exceptions import ConfigurationError, SecurityViolationError
-from aetherwall.domain.gateway import GatewayPipeline
-from aetherwall.domain.models import (
+from agent_ops.domain.exceptions import ConfigurationError, SecurityViolationError
+from agent_ops.domain.gateway import GatewayPipeline
+from agent_ops.domain.models import (
     ActionDecision,
     AgentRequest,
     SecurityAnalysis,
     ValidationResult,
 )
-from aetherwall.interfaces.validator import CoreGatewayValidatorInterface
-from aetherwall.interfaces.verifier import SecurityVerifierInterface
+from agent_ops.interfaces.validator import CoreGatewayValidatorInterface
+from agent_ops.interfaces.verifier import SecurityVerifierInterface
 from tests.domain.test_gateway import StubRouter
 
 # ── Test Doubles ──────────────────────────────────────────────────────
@@ -367,8 +367,8 @@ class TestHumanApprovalFlow:
     @pytest.mark.asyncio
     async def test_disabled_hitl_denies_escalated_requests(self) -> None:
         """With human_approval disabled, ESCALATE becomes a hard deny."""
-        from aetherwall.domain.config import HumanApprovalConfig
-        from aetherwall.domain.exceptions import ValidationRejectedError
+        from agent_ops.domain.config import HumanApprovalConfig
+        from agent_ops.domain.exceptions import ValidationRejectedError
 
         config = GatewayConfig(
             connections=[_conn()],
@@ -428,8 +428,8 @@ class TestHumanApprovalFlow:
 
 class TestConfigV11:
     def test_v11_minimal_loads(self, tmp_path) -> None:
-        f = tmp_path / "aether.yaml"
-        f.write_text("aetherwall_gateway:\n  version: '1.1'\n")
+        f = tmp_path / "agentops.yaml"
+        f.write_text("agentops_gateway:\n  version: '1.1'\n")
         config = load_config(f)
         assert config.version == "1.1"
         assert config.governance.default_fail_mode == "fail_closed"
@@ -441,9 +441,9 @@ class TestConfigV11:
 
     def test_env_credential_expansion(self, monkeypatch, tmp_path) -> None:
         monkeypatch.setenv("AGENT_TOKEN", "s3cret")
-        f = tmp_path / "aether.yaml"
+        f = tmp_path / "agentops.yaml"
         f.write_text(
-            "aetherwall_gateway:\n"
+            "agentops_gateway:\n"
             "  version: '1.0'\n"
             "  connections:\n"
             "    - agent_identity: a\n"
@@ -455,9 +455,9 @@ class TestConfigV11:
 
     def test_missing_env_credential_raises(self, monkeypatch, tmp_path) -> None:
         monkeypatch.delenv("AGENT_TOKEN", raising=False)
-        f = tmp_path / "aether.yaml"
+        f = tmp_path / "agentops.yaml"
         f.write_text(
-            "aetherwall_gateway:\n"
+            "agentops_gateway:\n"
             "  version: '1.0'\n"
             "  connections:\n"
             "    - agent_identity: a\n"

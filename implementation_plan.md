@@ -1,17 +1,17 @@
-# 🛡️ AetherWall: The Enterprise Agent-to-[Agent/MCP] Gateway
+# 🛡️ AgentOps: The Enterprise Agent-to-[Agent/MCP] Gateway
 
 ## The Name & Market Reality
 *I have conducted deep research on the 2026 market landscape:*
-1. **The Name:** "AetherWall" represents an invisible, omnipresent protective barrier. It is completely unique in the 2026 AI landscape, giving you a strong brand identity that stands apart from generic terms.
-2. **Existing Solutions:** Commercial solutions like *CloudMatos* and *AgentGateway.dev* exist as expensive SaaS products. However, there is **no open-source, self-hosted, edge-deployable equivalent** that combines LangGraph agent validation, MCP protocol termination, and APISIX routing. AetherWall will be the open-source pioneer.
+1. **The Name:** "AgentOps" represents an invisible, omnipresent protective barrier. It is completely unique in the 2026 AI landscape, giving you a strong brand identity that stands apart from generic terms.
+2. **Existing Solutions:** Commercial solutions like *CloudMatos* and *AgentGateway.dev* exist as expensive SaaS products. However, there is **no open-source, self-hosted, edge-deployable equivalent** that combines LangGraph agent validation, MCP protocol termination, and APISIX routing. AgentOps will be the open-source pioneer.
 
 ## How It Bundles All Previous Concepts
-AetherWall is not just a dumb router; it is the ultimate culmination of all the projects we discussed earlier:
+AgentOps is not just a dumb router; it is the ultimate culmination of all the projects we discussed earlier:
 
-*   **MCP Integration (SynapseDB):** AetherWall natively implements the Model Context Protocol (MCP). It exposes internal enterprise tools (databases, APIs) as secure MCP endpoints, allowing external agents to connect only via authorized channels.
+*   **MCP Integration (SynapseDB):** AgentOps natively implements the Model Context Protocol (MCP). It exposes internal enterprise tools (databases, APIs) as secure MCP endpoints, allowing external agents to connect only via authorized channels.
 *   **The Internal Agent Council (LangGraph):** When a request comes in, it isn't just checked by a regex. It triggers a LangGraph **Validation Council** (Internal Agents). These agents debate whether the inbound/outbound request is safe, making logical decisions based on context.
 *   **AgentShield (Adversarial Defense):** The concepts from AgentShield are built directly into the gateway's traffic inspection layer. It uses LLM Guard to dynamically detect prompt injections, multi-agent hijacks, and context poisoning attempts in real-time.
-*   **Domain Expertise (MedGraph/LidLens):** By defining `aether.yaml` profiles, a bank can use it to secure LidLens finance transactions, or a hospital can use it to secure medical record requests.
+*   **Domain Expertise (MedGraph/LidLens):** By defining `agentops.yaml` profiles, a bank can use it to secure LidLens finance transactions, or a hospital can use it to secure medical record requests.
 
 ---
 
@@ -40,7 +40,7 @@ We will build an "untouchable" production-grade deployment emphasizing **loose c
 
 ## 🛠️ Engineering Principles: Best Practices & Low Complexity
 
-To ensure a robust, maintainable, and easily testable system, AetherWall will strictly adhere to the following principles:
+To ensure a robust, maintainable, and easily testable system, AgentOps will strictly adhere to the following principles:
 
 1. **Finetuned Builds:** Multi-stage Docker builds for minimal production image sizes. Secure base images (e.g., distroless or alpine). Optimized dependency installation leveraging built-in Docker layer caching.
 2. **Decoupling & Cohesion:** 
@@ -53,7 +53,7 @@ To ensure a robust, maintainable, and easily testable system, AetherWall will st
 
 ## 🧪 Testing All The Way (TDD & Automation)
 
-Testing is a first-class citizen in AetherWall, integrated at every layer to guarantee stability:
+Testing is a first-class citizen in AgentOps, integrated at every layer to guarantee stability:
 
 - **Unit Testing (Pytest):** Targeting 100% coverage on core domain logic, validators, and LangGraph agents using mocked LLM responses (preventing flaky network tests).
 - **Integration Testing:** Testing the interaction boundaries between components (e.g., the FastAPI middleware communicating with Qdrant and LiteLLM) using isolated environments like `TestContainers`.
@@ -75,11 +75,11 @@ QDRANT_API_KEY=xxx
 APISIX_ADMIN_KEY=xxx
 ```
 
-### 2. Gateway Deployment Spec (`aether.yaml`)
+### 2. Gateway Deployment Spec (`agentops.yaml`)
 This declarative file dictates exactly how internal agents interact with external entities.
 ```yaml
-# aether.yaml
-aetherwall_gateway:
+# agentops.yaml
+agentops_gateway:
   version: "1.0"
   
   routing:
@@ -128,7 +128,7 @@ aetherwall_gateway:
 
 ### Step 3: Docker Topology & Finetuned Builds ✅
 - `[x]` Create multi-stage `Dockerfile`
-- `[x]` Create `.env.sample` and `aether.yaml` skeleton
+- `[x]` Create `.env.sample` and `agentops.yaml` skeleton
 - `[x]` Create `docker-compose.yml` (APISIX, LiteLLM, Ollama, Qdrant, LLM Guard)
 - `[x]` Create APISIX and LiteLLM config files
 
@@ -181,7 +181,7 @@ platform landscape (see `docs/comparison.md`).*
   whenever `metadata.tool_name` is present.
 - **`rate_limit` was dead config** — sliding-window limiter now enforced per agent.
 - **No authentication** — `agent_id` was self-asserted. Connections now carry
-  `credential:` (with `${ENV_VAR}` resolution) checked via `X-Aetherwall-Auth`.
+  `credential:` (with `${ENV_VAR}` resolution) checked via `X-Agentops-Auth`.
 
 ### Capabilities added (mapped to market expectations)
 - Kill switch per agent (`enabled: false`) + `POST /config/reload` hot-reload
