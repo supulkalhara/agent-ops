@@ -71,7 +71,11 @@ Make the config *generic-with-guardrails* instead of demo-shaped:
 ### 2026-11-10 — Session 1
 - Market research: `docs/comparison.md` (3 camps, capability matrix, compliance mapping).
 - Governance layer built per research (spec v1.1): auth, kill switch + hot reload, enforce/monitor modes, fail-open/fail-closed, HITL approval queue, spend/rate limits, tool least-privilege enforcement, response scanning, config thresholds. 131 tests green, ruff+mypy clean.
-- **Session 2 (same day):** project renamed to **AgentOps**; repo `agent-ops`; MIT license added; docs rebranded; §"Identity" rewritten; legacy `agentops.yaml` / `agentops_gateway` configs still load.
+- **Session 2 (same day):** project renamed to **AgentOps**; GitHub repo renamed `supulkalhara/aether` → **[supulkalhara/agent-ops](https://github.com/supulkalhara/agent-ops)** (old URL redirects); MIT `LICENSE` added and detected by GitHub; Python package `aetherwall` → `agent_ops` (distribution `agent-ops`, distinct from the existing `agentops` package); spec `aether.yaml` → `agentops.yaml` (loader still accepts the legacy `aetherwall_gateway` root key); header `X-Agentops-Auth`; env prefix `AGENTOPS_*`; rebased on top of community README-fix PRs (#4, #6) that landed remotely — nothing lost. 131 tests green, ruff + mypy clean, pushed.
+
+### Next session start points
+- Phase 1 (generic config + RBAC) per roadmap above; then Phase 2 (UI), Phase 3 (MCP server), Phase 4 (one-command install).
+- NOTE: local directory `/Users/supul/Dev/AetherWall` still has the old name — rename to `agent-ops` when convenient, then recreate the venv (`python3 -m venv .venv` + `pip install -e ".[dev]"`), since absolute venv paths break on rename.
 
 ---
 
