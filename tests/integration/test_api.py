@@ -46,6 +46,11 @@ class MockVerifier(SecurityVerifierInterface):
     ) -> SecurityAnalysis:
         return self._analysis
 
+    async def verify_output(
+        self, request: AgentRequest, response_text: str
+    ) -> SecurityAnalysis:
+        return SecurityAnalysis(is_safe=True, confidence_score=0.0)
+
 
 class MockValidator(CoreGatewayValidatorInterface):
     """Always returns allow."""

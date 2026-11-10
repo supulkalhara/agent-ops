@@ -22,6 +22,9 @@ class MockVerifier(SecurityVerifierInterface):
     async def verify_payload(self, request):
         return SecurityAnalysis(is_safe=True, confidence_score=0.99)
 
+    async def verify_output(self, request, response_text):
+        return SecurityAnalysis(is_safe=True, confidence_score=0.0)
+
 class MockValidator(CoreGatewayValidatorInterface):
     async def evaluate_request(self, request, security_analysis, context):
         return ValidationResult(decision=ActionDecision.ALLOW, reasoning="Mock validation passed")

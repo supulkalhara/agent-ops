@@ -164,3 +164,36 @@ aetherwall_gateway:
 - **Ruff** — All checks passed
 - **MyPy** — No issues found in 19 source files
 - **0.61s** total test execution time
+
+---
+
+## 🏛️ Step 6: Market-Driven Governance Layer (spec v1.1) ✅
+
+*November 2026 — driven by a fresh market research pass covering protocols
+(MCP, A2A, MITRE ATLAS, OWASP Agentic), open-source enforcement points
+(agentgateway, LiteLLM, Portkey, OPA/Cedar/OpenFGA) and the commercial
+platform landscape (see `docs/comparison.md`).*
+
+### Defects fixed
+- **ESCALATE routed as ALLOW** — escalated requests were forwarded without
+  human review. Now held in a pending queue; v1.0's most dangerous gap.
+- **`mcp_tools_allowed` was dead config** — tool allow-lists are now enforced
+  whenever `metadata.tool_name` is present.
+- **`rate_limit` was dead config** — sliding-window limiter now enforced per agent.
+- **No authentication** — `agent_id` was self-asserted. Connections now carry
+  `credential:` (with `${ENV_VAR}` resolution) checked via `X-Aetherwall-Auth`.
+
+### Capabilities added (mapped to market expectations)
+- Kill switch per agent (`enabled: false`) + `POST /config/reload` hot-reload
+- Enforce / monitor modes, global and per-connection (`would_decision` audit)
+- Fail-open / fail-closed posture for verifier outages
+- Configurable council decision thresholds (`governance.decision_thresholds`)
+- Human-in-the-loop approval workflow with expiry + `on_timeout` policy
+- Transaction limits (`transaction_limit_usd`) + daily spend ledger
+- Optional return-path (response) verification (`verify_responses`)
+- Approval store with memory bounds and expiry semantics
+
+### Quality after v1.1
+- **131 tests** across 8 test modules (governance + enforcement suites added)
+- **83% code coverage** (21 source files)
+- **Ruff** — All checks passed · **MyPy** — No issues in 21 source files

@@ -51,15 +51,60 @@ class ValidationResult(BaseModel):
     modified_payload: str | None = None
 
 
+class ApprovalStatus(str, Enum):
+    """Lifecycle of a human-in-the-loop approval."""
+
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    EXPIRED = "expired"
+
+
+class ApprovalRecord(BaseModel):
+    """
+    A request held for human review by the governance layer.
+
+    Created when the validation council ESCALATEs and human approval
+    is enabled. Stores the full original request and validation result
+    so the gateway can resume routing exactly where it paused.
+    """
+
+    approval_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()),
+        description="Unique identifier for this approval",
+    )
+    request: AgentRequest
+    validation: ValidationResult
+    security_analysis: SecurityAnalysis | None = None
+    context: dict[str, Any] = Field(default_factory=dict)
+    status: ApprovalStatus = ApprovalStatus.PENDING
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    expires_at: datetime | None = None
+    reviewer: str | None = None
+    review_comment: str | None = None
+    resolved_at: datetime | None = None
+
+
 class GatewayResponse(BaseModel):
     """
     Complete response from the gateway pipeline.
 
     Captures the final decision, reasoning, optional route result,
-    and the security analysis for a full audit trail.
+    and the security analysis for a full audit trail. In monitor mode,
+    ``would_decision`` records the decision that *would* have been
+    enforced while traffic was allowed to proceed.
     """
 
     decision: ActionDecision
     reasoning: str
     route_result: Any | None = None
     security_analysis: SecurityAnalysis | None = None
+    # Human-in-the-loop: populated when decision == escalate.
+    approval_id: str | None = None
+    # Monitor mode bookkeeping (never affects traffic).
+    monitor_mode: bool = False
+    would_decision: ActionDecision | None = None
+    # Output verification: analysis of what was routed back.
+    output_analysis: SecurityAnalysis | None = None

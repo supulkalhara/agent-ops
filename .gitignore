@@ -172,3 +172,4 @@ cython_debug/
 # Docker volumes data (if running locally without named volumes)
 docker-data/
 
+.DS_Store

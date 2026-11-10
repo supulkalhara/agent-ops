@@ -15,7 +15,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from aetherwall.api.dependencies import (
@@ -23,6 +23,7 @@ from aetherwall.api.dependencies import (
     get_config,
     get_pipeline,
 )
+from aetherwall.domain.approvals import ApprovalStateError
 from aetherwall.domain.exceptions import (
     AetherWallError,
     RoutingError,
@@ -107,7 +108,7 @@ class ProcessRequest(BaseModel):
     )
     metadata: dict[str, Any] = Field(
         default_factory=dict,
-        description="Additional context info",
+        description="Additional context info (tool_name, amount_usd, ...)",
     )
     context: dict[str, Any] = Field(
         default_factory=dict,
@@ -124,6 +125,12 @@ class ProcessResponse(BaseModel):
     route_result: Any | None = None
     security_flags: list[str] = Field(default_factory=list)
     confidence_score: float | None = None
+    output_flags: list[str] = Field(default_factory=list)
+    # Human-in-the-loop: set when decision == escalate
+    approval_id: str | None = None
+    # Monitor-mode bookkeeping
+    monitor_mode: bool = False
+    would_decision: str | None = None
 
 
 class ErrorResponse(BaseModel):
@@ -149,15 +156,22 @@ class ErrorResponse(BaseModel):
     summary="Process an agent request through the security pipeline",
     tags=["Gateway"],
 )
-async def process_request(body: ProcessRequest) -> ProcessResponse:
+async def process_request(
+    body: ProcessRequest,
+    x_aetherwall_auth: str | None = Header(
+        default=None,
+        alias="X-Aetherwall-Auth",
+        description="Agent credential verifying its identity (when configured)",
+    ),
+) -> ProcessResponse:
     """
-    Process an inbound agent request through the full security pipeline.
+    Process an inbound agent request through the full governed pipeline.
 
     Phases:
-    1. Policy pre-check (agent + destination allow-list)
-    2. Payload verification (LLM Guard)
-    3. Council validation (LangGraph)
-    4. Routing (APISIX)
+    0. Governance gate (auth, kill switch, allow-lists, limits)
+    1. Payload verification (LLM Guard)
+    2. Council validation (LangGraph)
+    3. Routing (APISIX) — ESCALATE decisions pause for human approval
     """
     if _pipeline is None:
         raise HTTPException(
@@ -175,7 +189,9 @@ async def process_request(body: ProcessRequest) -> ProcessResponse:
 
     try:
         response: GatewayResponse = await _pipeline.process_request(
-            agent_request, context=body.context
+            agent_request,
+            context=body.context,
+            auth_token=x_aetherwall_auth,
         )
 
         # Log to Qdrant (fire-and-forget, don't block the response)
@@ -208,6 +224,18 @@ async def process_request(body: ProcessRequest) -> ProcessResponse:
             confidence_score=(
                 response.security_analysis.confidence_score
                 if response.security_analysis
+                else None
+            ),
+            output_flags=(
+                response.output_analysis.flags
+                if response.output_analysis
+                else []
+            ),
+            approval_id=response.approval_id,
+            monitor_mode=response.monitor_mode,
+            would_decision=(
+                response.would_decision.value
+                if response.would_decision
                 else None
             ),
         )
@@ -284,6 +312,148 @@ async def search_audit(
         raise HTTPException(
             status_code=500,
             detail=f"Audit search failed: {exc}",
+        ) from exc
+
+
+# ── Governance Endpoints ─────────────────────────────────────────────
+
+
+class ApprovalDecisionRequest(BaseModel):
+    """Reviewer's decision on a pending escalation."""
+
+    action: str = Field(..., description="approve | reject")
+    reviewer: str = Field(..., description="Who is reviewing")
+    comment: str | None = Field(None, description="Optional review note")
+
+
+@app.get(
+    "/governance/approvals",
+    summary="List pending human approvals",
+    tags=["Governance"],
+)
+async def list_pending_approvals() -> dict[str, Any]:
+    """
+    List all requests ESCALATEd by the validation council and awaiting
+    human review, oldest first.
+    """
+    if _pipeline is None:
+        raise HTTPException(status_code=503, detail="Pipeline not initialized")
+
+    pending = await _pipeline._store.pending()
+    return {
+        "count": len(pending),
+        "approvals": [
+            {
+                "approval_id": rec.approval_id,
+                "agent_id": rec.request.agent_id,
+                "destination": rec.request.destination,
+                "payload": rec.request.payload,
+                "reasoning": rec.validation.reasoning,
+                "created_at": rec.created_at.isoformat(),
+                "expires_at": (
+                    rec.expires_at.isoformat() if rec.expires_at else None
+                ),
+            }
+            for rec in pending
+        ],
+    }
+
+
+@app.post(
+    "/governance/approvals/{approval_id}/decision",
+    summary="Approve or reject a pending escalation",
+    tags=["Governance"],
+)
+async def resolve_pending_approval(
+    approval_id: str,
+    decision: ApprovalDecisionRequest,
+) -> dict[str, Any]:
+    """
+    Resolve a pending approval. Approving resumes routing of the held
+    request; rejecting blocks it. Expired approvals settle according to
+    the configured ``on_timeout`` policy.
+    """
+    if _pipeline is None:
+        raise HTTPException(status_code=503, detail="Pipeline not initialized")
+
+    if decision.action not in {"approve", "reject"}:
+        raise HTTPException(
+            status_code=422,
+            detail="action must be 'approve' or 'reject'",
+        )
+
+    approved = decision.action == "approve"
+    try:
+        response = await _pipeline.resolve_approval(
+            approval_id,
+            approved=approved,
+            reviewer=decision.reviewer,
+            comment=decision.comment,
+        )
+    except ApprovalStateError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.error("Approval resolution failed: %s", exc, exc_info=True)
+        raise HTTPException(
+            status_code=500, detail=f"Approval resolution failed: {exc}"
+        ) from exc
+
+    if response is None:
+        raise HTTPException(
+            status_code=404, detail=f"Unknown approval '{approval_id}'"
+        )
+
+    # Audit the human decision too
+    if _audit_logger:
+        try:
+            await _audit_logger.log_decision(
+                request_id=f"approval-{approval_id}",
+                agent_id=decision.reviewer,
+                destination="governance/human-review",
+                payload=f"{decision.action} by {decision.reviewer}",
+                response=response,
+            )
+        except Exception:  # noqa: BLE001 — audit is best-effort
+            logger.warning(
+                "Failed to audit approval decision %s", approval_id, exc_info=True
+            )
+
+    return {
+        "approval_id": approval_id,
+        "action": decision.action,
+        "reviewer": decision.reviewer,
+        "decision": response.decision.value,
+        "reasoning": response.reasoning,
+        "route_result": response.route_result,
+    }
+
+
+@app.post(
+    "/config/reload",
+    summary="Hot-reload aether.yaml (kill switches, policy changes)",
+    tags=["Governance"],
+)
+async def reload_config() -> dict[str, Any]:
+    """
+    Reload the gateway configuration without restarting the service.
+
+    This makes kill switches and policy changes take effect immediately:
+    set ``enabled: false`` for an agent in aether.yaml, call this
+    endpoint, and the agent is revoked on the next request.
+    """
+    global _pipeline
+    try:
+        # Clear the cached config and rebuild the pipeline from disk.
+        get_config.cache_clear()
+        _pipeline = get_pipeline()
+        return {
+            "status": "reloaded",
+            "config_version": get_config().version,
+        }
+    except Exception as exc:
+        logger.error("Config reload failed: %s", exc, exc_info=True)
+        raise HTTPException(
+            status_code=500, detail=f"Config reload failed: {exc}"
         ) from exc
 
 

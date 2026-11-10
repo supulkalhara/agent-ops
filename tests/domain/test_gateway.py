@@ -36,6 +36,11 @@ class StubVerifier(SecurityVerifierInterface):
     async def verify_payload(self, request: AgentRequest) -> SecurityAnalysis:
         return self._analysis
 
+    async def verify_output(
+        self, request: AgentRequest, response_text: str
+    ) -> SecurityAnalysis:
+        return SecurityAnalysis(is_safe=True, confidence_score=0.0)
+
 
 class StubValidator(CoreGatewayValidatorInterface):
     """Returns a pre-configured ValidationResult."""

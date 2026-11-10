@@ -97,6 +97,11 @@ class SimulatedLLMGuardVerifier(SecurityVerifierInterface):
             ),
         )
 
+    async def verify_output(
+        self, request: AgentRequest, response_text: str
+    ) -> SecurityAnalysis:
+        return SecurityAnalysis(is_safe=True, confidence_score=0.0)
+
 
 class RecordingRouter(APIRouterInterface):
     """Records all routing decisions for assertion."""
@@ -420,6 +425,9 @@ class TestE2EMultiPhaseAttack:
         SQL injection with DELETE/DROP → moderate risk → ESCALATE.
         The council correctly escalates for human review rather
         than outright denying (graduated response).
+
+        ESCALATE must NOT be auto-routed: the request is held pending
+        human approval, and only an approved decision routes it.
         """
         pipeline, router = _e2e_pipeline()
 
@@ -434,9 +442,20 @@ class TestE2EMultiPhaseAttack:
             )
         )
 
-        # Moderate risk: ESCALATE for human review
+        # Moderate risk: ESCALATE for human review — held, not routed
         assert response.decision == ActionDecision.ESCALATE
-        assert len(router.routed) == 1  # escalated but forwarded
+        assert response.approval_id is not None
+        assert len(router.routed) == 0  # not forwarded without approval
+
+        # After a human approves, the request is resumed and routed
+        resumed = await pipeline.resolve_approval(
+            response.approval_id,
+            approved=True,
+            reviewer="security-team",
+        )
+        assert resumed is not None
+        assert resumed.decision == ActionDecision.ALLOW
+        assert len(router.routed) == 1
 
     @pytest.mark.asyncio
     async def test_max_risk_payload_denied(self) -> None:

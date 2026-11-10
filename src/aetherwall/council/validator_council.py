@@ -57,6 +57,10 @@ class CouncilState(TypedDict):
     context: dict[str, Any]
     rules: list[str]
 
+    # Governance thresholds (from aether.yaml governance.decision_thresholds)
+    deny_risk: float
+    escalate_risk: float
+
     # Agent assessments
     risk_assessment: str
     risk_score: float
@@ -183,23 +187,28 @@ async def _arbiter_node(state: CouncilState) -> dict[str, Any]:
     """
     Arbiter — makes the final decision based on both agents' assessments.
 
-    Decision matrix:
-    - High risk (>0.7) OR context violations → DENY
-    - Medium risk (0.3-0.7) AND context aligned → ESCALATE
-    - Low risk (<0.3) AND context aligned → ALLOW
+    Thresholds come from `aether.yaml` governance.decision_thresholds
+    (with safe defaults for direct node calls):
+
+    Decision matrix (deny_risk=0.7, escalate_risk=0.3):
+    - risk > deny_risk OR context violations → DENY
+    - escalate_risk < risk <= deny_risk AND aligned → ESCALATE
+    - risk <= escalate_risk AND aligned → ALLOW
     """
     risk_score = state["risk_score"]
     context_aligned = state["context_aligned"]
+    deny_risk = float(state.get("deny_risk", 0.7))
+    escalate_risk = float(state.get("escalate_risk", 0.3))
 
     parts: list[str] = [
         f"Risk assessment: {state['risk_assessment']} (score={risk_score:.2f})",
         f"Context assessment: {state['context_assessment']}",
     ]
 
-    if risk_score > 0.7 or not context_aligned:
+    if risk_score > deny_risk or not context_aligned:
         decision = ActionDecision.DENY.value
         parts.append("DECISION: DENY — risk too high or context misaligned")
-    elif risk_score > 0.3:
+    elif risk_score > escalate_risk:
         decision = ActionDecision.ESCALATE.value
         parts.append("DECISION: ESCALATE — moderate risk, needs human review")
     else:
@@ -265,6 +274,7 @@ class ValidatorCouncil(CoreGatewayValidatorInterface):
         Run the full council deliberation on a request.
         """
         # Build the initial state from the request + analysis
+        thresholds = self.config.governance.decision_thresholds
         initial_state: CouncilState = {
             "agent_id": request.agent_id,
             "destination": request.destination,
@@ -274,6 +284,8 @@ class ValidatorCouncil(CoreGatewayValidatorInterface):
             "is_safe": security_analysis.is_safe,
             "context": context,
             "rules": self.config.validation_council.rules,
+            "deny_risk": thresholds.deny_risk,
+            "escalate_risk": thresholds.escalate_risk,
             # Placeholders — filled by agents
             "risk_assessment": "",
             "risk_score": 0.0,

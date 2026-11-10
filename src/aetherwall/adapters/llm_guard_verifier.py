@@ -135,6 +135,42 @@ class LLMGuardVerifier(SecurityVerifierInterface):
             redacted_payload=redacted,
         )
 
+    async def verify_output(
+        self, request: AgentRequest, response_text: str
+    ) -> SecurityAnalysis:
+        """
+        Scan a response body routed back to the calling agent.
+
+        Uses the LLM Guard output endpoint, guarding the return path
+        against exfiltrated data and malicious content.
+        """
+        try:
+            response = await self._client.post(
+                "/analyze/output",
+                json={"output": response_text},
+            )
+            response.raise_for_status()
+            return self._parse_response(response.json(), response_text)
+
+        except httpx.HTTPStatusError as exc:
+            logger.error(
+                "LLM Guard (output) returned HTTP %d: %s",
+                exc.response.status_code,
+                exc.response.text,
+            )
+            return SecurityAnalysis(
+                is_safe=False,
+                confidence_score=1.0,
+                flags=["llm_guard_error"],
+            )
+        except httpx.RequestError as exc:
+            logger.error("LLM Guard (output) unreachable: %s", exc)
+            return SecurityAnalysis(
+                is_safe=False,
+                confidence_score=1.0,
+                flags=["llm_guard_unreachable"],
+            )
+
     async def close(self) -> None:
         """Close the HTTP client gracefully."""
         await self._client.aclose()

@@ -17,6 +17,7 @@ from aetherwall.adapters.apisix_router import APISIXRouter
 from aetherwall.adapters.llm_guard_verifier import LLMGuardVerifier
 from aetherwall.adapters.qdrant_logger import QdrantAuditLogger
 from aetherwall.council.validator_council import ValidatorCouncil
+from aetherwall.domain.approvals import ApprovalStore
 from aetherwall.domain.config import GatewayConfig, load_config
 from aetherwall.domain.gateway import GatewayPipeline
 
@@ -87,10 +88,15 @@ def get_pipeline() -> GatewayPipeline:
         os.environ.get("AETHERWALL_SECURITY_THRESHOLD", "0.7")
     )
 
+    approval_store = ApprovalStore(
+        timeout_minutes=config.governance.human_approval.timeout_minutes,
+    )
+
     return GatewayPipeline(
         verifier=get_verifier(),
         validator=get_validator(),
         router=get_router(),
         config=config,
         security_threshold=threshold,
+        approval_store=approval_store,
     )
